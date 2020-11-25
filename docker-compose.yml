@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - IP_CRON=* * * * *
+
+  redis:
+    image: "redis:6-alpine"
+
+#  redis-commander:
+#    image: "rediscommander/redis-commander"
+#    environment:
+#      - REDIS_HOST=redis
+#    ports:
+#      - "8081:8081"
+#    depends_on:
+#      - redis

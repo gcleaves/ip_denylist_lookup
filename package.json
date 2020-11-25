@@ -1,0 +1,21 @@
+{
+  "name": "ip_denylist_lookup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "cron": "^1.8.2",
+    "csv-parser": "^2.3.3",
+    "date-fns": "^2.16.1",
+    "express": "^4.17.1",
+    "ioredis": "^4.19.1",
+    "ip-utils": "^2.4.0"
+  }
+}
