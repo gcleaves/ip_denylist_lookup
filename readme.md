@@ -1,6 +1,6 @@
 # IP DENY LIST LOOKUP
 * Download IP lists from [firehol](https://iplists.firehol.org/)
-* Process them into non-overlapping ranges
+* Process them into unique non-overlapping ranges
 * Upload ranges to Redis (Redis is required!)
 * Serve HTTP endpoint to query an IP address
 * Periodically refresh lists
@@ -23,19 +23,25 @@ Question: would [iprange](https://github.com/firehol/iprange/wiki) have made my 
   * cron schedule
 * edit initial list array in launch.js
 * `node launch.js`
-* wait for download and processing, it's ready when you see `IP ranges app listening at...`
-* visit http://localhost:3000/192.168.0.1
 
 ## Run with Docker
 * edit docker-compose.yml as needed
 * `docker-compose up`
-* wait for download and processing, it's ready when you see `IP ranges app listening at...`
+
+## Usage notes
+* wait for download and processing, system is ready when you see `IP ranges app listening at...`
 * visit http://localhost:3000/192.168.0.1
+* updated lists will be pulled according to given cron schedule
+* it is possible to add or remove lists while the system is running by editing the Redis key `ip_lists:lists`. Changes will take place during the next scheduled update.
 
 ## Gotchas
 * memory limits
-  * `NODE_OPTIONS=--max_old_space_size=4096` could help
+  * `NODE_OPTIONS=--max_old_space_size=4096` env variable could help
   * check your Docker VM settings in Windows or Mac, 2GB RAM won't cut it
+
+## Todo
+* ability to query multiple IP addresses at once
+* ability to define whether HTTP endpoint should return info in plain text or JSON
  
 -------------------------------------------
 Based on prior work:
