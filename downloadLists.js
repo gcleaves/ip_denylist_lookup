@@ -6,13 +6,12 @@ const path = require('path');
 const util = require('util');
 const Redis = require("ioredis");
 
-
 function ip2int(ip) {
     return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
-async function downloadFile(fileUrl, outputLocationPath, tag) {
+async function downloadFile(fileUrl, writer, tag) {
 	console.log('starting ' + fileUrl);
-    const writer = fs.createWriteStream(outputLocationPath,{flags:'a'});
+
     return axios({
         method: 'get',
         url: fileUrl,
@@ -50,15 +49,23 @@ async function downloadFile(fileUrl, outputLocationPath, tag) {
 }
 
 exports.downloadLists = async (outputFile, redisPrefix) => {
-    const redis = new Redis({
-        host:process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT, // Redis port
-        family: process.env.REDIS_IP_FAMILY, // 4 (IPv4) or 6 (IPv6)
-        password: process.env.REDIS_PASS,
-        db: process.env.REDIS_DB,
+    return new Promise(async (resolve, reject) => {
+        const writer = fs.createWriteStream(outputFile,{flags:'a'});
+        writer.on('close', () => {
+            console.log('writer closed');
+            resolve();
+        });
+        const redis = new Redis({
+            host:process.env.REDIS_HOST,
+            port: process.env.REDIS_PORT, // Redis port
+            family: process.env.REDIS_IP_FAMILY, // 4 (IPv4) or 6 (IPv6)
+            password: process.env.REDIS_PASS,
+            db: process.env.REDIS_DB,
+        });
+        const listArray = await redis.smembers(redisPrefix + 'lists');
+        fs.writeFileSync(outputFile, "start_int,end_int,list\n");
+        await Promise
+            .all(listArray.map( f => downloadFile(f, writer, path.posix.basename(f).replace(/\.(?:ip|net)set/,""))));
+        writer.close();
     });
-    const listArray = await redis.smembers(redisPrefix + 'lists');
-    fs.writeFileSync(outputFile, "start_int,end_int,list\n");
-    return Promise
-        .all(listArray.map( f => downloadFile(f, outputFile, path.posix.basename(f).replace(/\.(?:ip|net)set/,""))))
 };

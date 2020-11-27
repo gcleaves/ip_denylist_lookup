@@ -1,15 +1,13 @@
 # IP DENY LIST LOOKUP
 * Download IP lists from [firehol](https://iplists.firehol.org/)
-* Process them into unique non-overlapping ranges
+* Process them into unique non-overlapping ranges while maintaining the list name each IP belongs to
 * Upload ranges to Redis (Redis is required!)
 * Serve HTTP endpoint to query an IP address
 * Periodically refresh lists
 
-I wanted to be able to look up an IP address to know how risky it is. Firehol curates a list of suspicious IP addresses. The hard part is making the lookup fast. A traditional database is not apt because the need is to search `where $ip is between start_ip_range and end_ip_range` which can't be optimized with an DB index. Some lookups were taking 7s when attempting the above with MySql.
+I wanted to be able to look up an IP address to know how risky it is. Firehol curates a list of suspicious IP addresses. There are two difficulties: a) keeping track of which list the IP address belongs to and b) making the lookup fast. A traditional database is not apt because the need is to search `where $ip is between start_ip_range and end_ip_range` which can't be optimized with an DB index. Some lookups were taking 7s when attempting the above with MySql.
 
-Digging into the Internet suggested that breaking the IP ranges into non-overlapping unique ranges and using a skip list was the way to go. This is what I have attempted to do and lookups now take 8ms, max. I think it works correctly. See bottom of page for more info on how this was accomplished.
-
-Question: would [iprange](https://github.com/firehol/iprange/wiki) have made my life easier? Doesn't look like it.
+Digging into the Internet suggested that breaking the IP ranges into non-overlapping unique ranges and using a skip list was the way to go. This is what I have attempted to do (using Redis) and lookups now take 5ms, max. I think it works correctly. See bottom of page for more info on how this was accomplished.
 
 ## Install
 * clone repo

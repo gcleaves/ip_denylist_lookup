@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const Redis = require("ioredis");
 const redis = new Redis({
     host:process.env.REDIS_HOST,
@@ -12,36 +13,59 @@ const CronJob = require('cron').CronJob;
 const dl = require('./downloadLists').downloadLists;
 const load = require('./loadToRedis').load;
 const serve = require('./serve').serve;
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const fireholLists = [
     'https://iplists.firehol.org/files/firehol_level2.netset',
-    'https://iplists.firehol.org/files/firehol_level1.netset',
-    // 'https://iplists.firehol.org/files/firehol_level3.netset',
-    // 'https://iplists.firehol.org/files/firehol_level4.netset',
-    // 'https://iplists.firehol.org/files/firehol_proxies.netset',
-    // 'https://iplists.firehol.org/files/firehol_webclient.netset',
-    // 'https://iplists.firehol.org/files/firehol_webserver.netset',
-    // 'https://iplists.firehol.org/files/firehol_abusers_1d.netset',
-    // 'https://iplists.firehol.org/files/firehol_abusers_30d.netset',
-    // 'https://iplists.firehol.org/files/firehol_anonymous.netset'
+     'https://iplists.firehol.org/files/firehol_level1.netset',
+    'https://iplists.firehol.org/files/firehol_level3.netset',
+    'https://iplists.firehol.org/files/firehol_level4.netset',
+    'https://iplists.firehol.org/files/firehol_proxies.netset',
+    'https://iplists.firehol.org/files/firehol_webclient.netset',
+    'https://iplists.firehol.org/files/firehol_webserver.netset',
+    'https://iplists.firehol.org/files/firehol_abusers_1d.netset',
+    'https://iplists.firehol.org/files/firehol_abusers_30d.netset',
+    'https://iplists.firehol.org/files/firehol_anonymous.netset'
 ];
 
 const redisPrefix = process.env.IP_REDIS_PREFIX || 'ip_lists:';
 const csvFile = process.env.IP_DOWNLOAD_LOCATION || './ipFile';
+const includePath = './other_lists';
 
 async function main() {
     await redis.del(redisPrefix + 'lists');
     await redis.sadd(redisPrefix + 'lists', fireholLists).then(()=>redis.disconnect());
     await dl(csvFile,redisPrefix);
+    //await sleep(10000);
     console.log("done downloading files");
+
+    // load other files
+    fs.readdirSync(includePath).forEach((file) => {
+        const theFile = `${includePath}/${file}`;
+        console.log(theFile);
+        if(fs.lstatSync(theFile).isFile()) {
+            fs.appendFileSync(csvFile, fs.readFileSync(theFile).toString())
+        }
+    });
+
     await load(csvFile, redisPrefix);
     console.log("loading done.");
-    serve(process.env.IP_HTTP_PORT || 3000, redisPrefix);
+    serve(process.env.IP_HTTP_PORT || 3000, redisPrefix, process.env.IP_PREFIX || '/');
 }
 
-const job = new CronJob(process.env.IP_CRON || '1 3 * * *', async function() {
+const job = new CronJob(process.env.IP_CRON || '* * * * *', async function() {
     await dl(csvFile, redisPrefix);
     console.log("done downloading files");
+
+    // load other files
+    fs.readdirSync(includePath).forEach((file) => {
+        const theFile = `${includePath}/${file}`;
+        console.log(theFile);
+        if(fs.lstatSync(theFile).isFile()) {
+            fs.appendFileSync(csvFile, fs.readFileSync(theFile).toString())
+        }
+    });
+
     await load(csvFile, redisPrefix);
     console.log("loading done.");
 });
