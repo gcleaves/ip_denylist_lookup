@@ -23,19 +23,23 @@ exports.serve = (port, redisPrefix, prefix) => {
     router.get('/:ip', async (req, res) => {
         let start = new Date();
         const ip = req.params.ip;
-        console.log(`request [${ip}]`);
+        let message = `request [${ip}]`;
+
         const long = ip2int(ip);
         let response = [];
 
         redis.zrangebyscore(redisPrefix + 'ranges', long, '+inf', 'LIMIT', 0, 1).then(answer => {
             const item = answer[0];
-            console.log(item);
+            //console.log(item);
             const [startInt, endInt, ...caca] = item.split(',');
-            let end = new Date() - start;
-            console.info('Execution time: %dms', end);
+
             if(long >= startInt && long <= endInt) {
                 response = caca;
+                message += ':' + response;
             }
+            let end = new Date() - start;
+            message += ':%dms';
+            console.log(message, end);
             res.send(response);
         });
     });
