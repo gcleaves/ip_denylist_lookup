@@ -18,18 +18,20 @@ const args = require('minimist')(process.argv.slice(2), {
     boolean: [
         'download',
         'load',
-        'serve'
+        'serve',
+		'gc'
     ],
     default: {
         download: true,
         load: true,
-        serve: true
+        serve: true,
+		gc: false
     }
 });
 
 const fireholLists = [
     'https://iplists.firehol.org/files/firehol_level2.netset',
-     'https://iplists.firehol.org/files/firehol_level1.netset',
+    'https://iplists.firehol.org/files/firehol_level1.netset',
     'https://iplists.firehol.org/files/firehol_level3.netset',
     'https://iplists.firehol.org/files/firehol_level4.netset',
     'https://iplists.firehol.org/files/firehol_proxies.netset',
@@ -47,7 +49,7 @@ const includePath = './other_lists';
 async function main() {
     if(args.download) {
         await redis.del(redisPrefix + 'lists');
-        await redis.sadd(redisPrefix + 'lists', fireholLists).then(()=>redis.disconnect());
+        if(fireholLists.length) await redis.sadd(redisPrefix + 'lists', fireholLists).then(()=>redis.disconnect());
         await dl(csvFile,redisPrefix);
         //await sleep(10000);
         console.log("done downloading files");
@@ -61,7 +63,7 @@ async function main() {
                 fs.appendFileSync(csvFile, fs.readFileSync(theFile).toString())
             }
         });
-        await load(csvFile, redisPrefix);
+        await load(csvFile, redisPrefix, args.gc);
         console.log("loading done.");
     }
     if(args.serve) {
@@ -82,7 +84,7 @@ const job = new CronJob(process.env.IP_CRON || '5 2 * * *', async function() {
         }
     });
 
-    await load(csvFile, redisPrefix);
+    await load(csvFile, redisPrefix, args.gc);
     console.log("loading done.");
 });
 job.start();

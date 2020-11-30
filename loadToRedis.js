@@ -4,12 +4,21 @@ const fs = require('fs');
 const Redis = require("ioredis");
 const { format} = require('date-fns');
 
+function forceGC() {
+   if (global.gc) {
+      global.gc();
+   } else {
+      console.warn('No GC hook! Start your program as `node --expose-gc file.js`.');
+   }
+}
+
 function ip2int(ip) {
     return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
-exports.load = (file, redisPrefix) => {
-    let k = 0;
+exports.load = (file, redisPrefix, gc) => {
+    //console.log('gc=%s',gc);
+	let k = 0;
     const scratch = [];
     return new Promise((resolve, reject) => {
         const redis = new Redis({
@@ -66,6 +75,7 @@ exports.load = (file, redisPrefix) => {
                 let s = [];
                 let n;
                 let m;
+				let plRes;
 
                 let pipeline = redis.pipeline();
                 for (let k = 0; k < scratch.length - 1; k++) {
@@ -74,7 +84,9 @@ exports.load = (file, redisPrefix) => {
                         console.log(`flattening ${k} of ${scratch.length}`);
                     }
                     if (!(k % 100000)) {
-                        pipeline.exec();
+                        plRes = await pipeline.exec();
+						plRes = null;
+						if(gc) forceGC();
                         pipeline = redis.pipeline(); //.client('reply', 'off');
                     }
                     let cur = scratch[k];
@@ -97,6 +109,7 @@ exports.load = (file, redisPrefix) => {
                     }
 
                     if (n <= m && s.length) {
+						s = [...new Set(s)];
                         pipeline.zadd(tempKey, m, `${n},${m},${s.join(',')}`);
                     }
                 }
