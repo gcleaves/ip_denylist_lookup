@@ -25,7 +25,7 @@ const args = require('minimist')(process.argv.slice(2), {
         download: true,
         load: true,
         serve: true,
-		gc: false
+		collectGarbage: false
     }
 });
 
@@ -44,6 +44,7 @@ const fireholLists = [
 
 const redisPrefix = process.env.IP_REDIS_PREFIX || 'ip_lists:';
 const csvFile = process.env.IP_DOWNLOAD_LOCATION || './ipFile';
+const collectGarbage = process.env.IP_COLLECT_GARBAGE || args.collectGarbage;
 const includePath = './other_lists';
 
 async function main() {
@@ -64,7 +65,7 @@ async function main() {
         console.log("done downloading files");
     }
     if(args.load) {
-        await load(csvFile, redisPrefix, args.gc);
+        await load(csvFile, redisPrefix, collectGarbage);
         console.log("loading done.");
     }
     if(args.serve) {

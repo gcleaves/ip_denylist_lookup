@@ -20,21 +20,26 @@ Digging into the Internet suggested that breaking the IP ranges into non-overlap
   * http listen port
   * cron schedule
 * edit initial list array in launch.js
-* `node launch.js`
+* `NODE_OPTIONS=--max_old_space_size=4096 node --expose-gc launch.js`
 
 ## Run with Docker
 * edit docker-compose.yml as needed
 * `docker-compose up`
 
 ## Usage notes
+* Node can use A LOT of memory while loading the IPs into Redis. Memory usage is much lower once loading is complete. On reference machine: 
+  * Loading takes 2.7GB, 32s without --collectGarbage option. 
+  * Loading takes 1.1GB, 43s with --collectGarbage
+  * `NODE_OPTIONS=--max_old_space_size=4096` or similar env variable required.
 * wait for download and processing, system is ready when you see `IP ranges app listening at...`
 * visit http://localhost:3000/192.168.0.1
 * updated lists will be pulled according to given cron schedule
 * it is possible to add or remove lists while the system is running by editing the Redis key `ip_lists:lists`. Changes will take place during the next scheduled update.
+* add files to ./other_lists folder to add your own IP lists
 
 ## Gotchas
 * memory limits
-  * `NODE_OPTIONS=--max_old_space_size=4096` env variable could help
+  
   * check your Docker VM settings in Windows or Mac, 2GB RAM won't cut it
 
 ## Todo
