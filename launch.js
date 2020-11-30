@@ -51,10 +51,7 @@ async function main() {
         await redis.del(redisPrefix + 'lists');
         if(fireholLists.length) await redis.sadd(redisPrefix + 'lists', fireholLists).then(()=>redis.disconnect());
         await dl(csvFile,redisPrefix);
-        //await sleep(10000);
-        console.log("done downloading files");
-    }
-    if(args.load) {
+
         // load other files
         fs.readdirSync(includePath).forEach((file) => {
             const theFile = `${includePath}/${file}`;
@@ -63,6 +60,10 @@ async function main() {
                 fs.appendFileSync(csvFile, fs.readFileSync(theFile).toString())
             }
         });
+
+        console.log("done downloading files");
+    }
+    if(args.load) {
         await load(csvFile, redisPrefix, args.gc);
         console.log("loading done.");
     }
