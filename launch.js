@@ -53,7 +53,7 @@ async function main() {
         if(fireholLists.length) await redis.sadd(redisPrefix + 'lists', fireholLists).then(()=>redis.disconnect());
         await dl(csvFile,redisPrefix);
 
-        // load other files
+        // concatenate other files
         fs.readdirSync(includePath).forEach((file) => {
             const theFile = `${includePath}/${file}`;
             console.log(theFile);
