@@ -45,7 +45,7 @@ const fireholLists = [
 const redisPrefix = process.env.IP_REDIS_PREFIX || 'ip_lists:';
 const csvFile = process.env.IP_DOWNLOAD_LOCATION || './ipFile';
 const collectGarbage = process.env.IP_COLLECT_GARBAGE || args.collectGarbage;
-const includePath = './other_lists';
+const includePath = __dirname + '/other_lists';
 
 async function main() {
     if(args.download) {
