@@ -1,5 +1,6 @@
 'use strict';
 
+const ipTools = require('ip-utils');
 const Redis = require("ioredis");
 const redis = new Redis({
     host:process.env.REDIS_HOST,
@@ -23,25 +24,33 @@ exports.serve = (port, redisPrefix, prefix) => {
     router.get('/:ip', async (req, res) => {
         let start = new Date();
         const ip = req.params.ip;
-        let message = `request [${ip}]`;
+        if(! ipTools.isValidIpv4(ip)) {
+            res.status(422);
+            res.send({error: 'invalid ipv4 address'});
+        } else {
 
-        const long = ip2int(ip);
-        let response = [];
+            let message = `request [${ip}]`;
 
-        redis.zrangebyscore(redisPrefix + 'ranges', long, '+inf', 'LIMIT', 0, 1).then(answer => {
-            const item = answer[0];
-            //console.log(item);
-            const [startInt, endInt, ...caca] = item.split(',');
+            const long = ipTools.toLong(ip);
+            let response = [];
 
-            if(long >= startInt && long <= endInt) {
-                response = caca;
-                message += ':' + response;
-            }
-            let end = new Date() - start;
-            message += ':%dms';
-            console.log(message, end);
-            res.send(response);
-        });
+            redis.zrangebyscore(redisPrefix + 'ranges', long, '+inf', 'LIMIT', 0, 1).then(answer => {
+                const item = answer[0];
+                //console.log(item);
+                const [startInt, endInt, ...caca] = item.split(',');
+
+                if (long >= startInt && long <= endInt) {
+                    response = caca;
+                    message += ':' + response;
+                } else {
+                    res.status(404);
+                }
+                let end = new Date() - start;
+                message += ':%dms';
+                console.log(message, end);
+                res.send(response);
+            });
+        }
     });
     app.use(prefix, router);
     app.listen(port, () => {
