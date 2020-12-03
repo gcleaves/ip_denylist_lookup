@@ -15,6 +15,7 @@
     "csv-parser": "^2.3.3",
     "date-fns": "^2.16.1",
     "express": "^4.17.1",
+    "express-fileupload": "^1.2.0",
     "ioredis": "^4.19.1",
     "ip-utils": "^2.4.0",
     "minimist": "^1.2.5"

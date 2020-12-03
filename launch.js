@@ -13,7 +13,6 @@ const CronJob = require('cron').CronJob;
 const dl = require('./downloadLists').downloadLists;
 const load = require('./loadToRedis').load;
 const serve = require('./serve').serve;
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const args = require('minimist')(process.argv.slice(2), {
     boolean: [
         'download',
