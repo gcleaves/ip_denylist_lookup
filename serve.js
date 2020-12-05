@@ -50,11 +50,21 @@ const lookupIP = (ip) => {
 exports.serve = (port, rp, prefix) => {
     redisPrefix = rp;
     prefix = prefix || '/';
+    router.get('/', (req, res) => res.redirect('/myip'));
+
+    router.get(['/help','/docs'], (req,res) => res.redirect('https://documenter.getpostman.com/view/212281/TVmQcarE'));
+
     router.get('/favicon.ico', (req, res) => res.status(204).end());
 
     router.post('/', async (req,res) => {
         const response = {};
         let ips = [];
+        if(Object.keys(req.body).length === 0) {
+            res
+                .status(422)
+                .send('missing body');
+            return;
+        }
         if(req.is('application/json')) {
             ips = req.body;
         } else {
@@ -132,6 +142,16 @@ exports.serve = (port, rp, prefix) => {
         } else {
             res.send(JSON.stringify(response));
         }
+    });
+
+    router.get('/myip', (req, res) => {
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        const response = {};
+        response.origin = ip;
+        lookupIP(ip).then( result => {
+            response.result = result;
+            res.send(response);
+        })
     });
 
     router.get('/:ip', (req, res) => {
