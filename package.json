@@ -18,6 +18,9 @@
     "express-fileupload": "^1.2.0",
     "ioredis": "^4.19.1",
     "ip-utils": "^2.4.0",
-    "minimist": "^1.2.5"
+    "minimist": "^1.2.5",
+    "ip_denylist_plugin_firehol": "file:./plugins/firehol",
+    "ip_denylist_plugin_example": "file:./plugins/example",
+    "ip_denylist_plugin_udger": "file:./plugins/udger"
   }
 }

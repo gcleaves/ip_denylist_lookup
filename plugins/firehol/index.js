@@ -48,22 +48,23 @@ async function downloadFile(fileUrl, writer, tag) {
     });
 }
 
-exports.downloadLists = async (outputFile, redisPrefix) => {
+module.exports = async (outputFile, listArray) => {
     return new Promise(async (resolve, reject) => {
         const writer = fs.createWriteStream(outputFile,{flags:'a'});
         writer.on('close', () => {
-            console.log('writer closed');
-            resolve();
+            console.log('firehol writer closed');
+            resolve("firehol");
         });
-        const redis = new Redis({
-            host:process.env.REDIS_HOST,
-            port: process.env.REDIS_PORT, // Redis port
-            family: process.env.REDIS_IP_FAMILY, // 4 (IPv4) or 6 (IPv6)
-            password: process.env.REDIS_PASS,
-            db: process.env.REDIS_DB,
-        });
-        const listArray = await redis.smembers(redisPrefix + 'lists');
-        fs.writeFileSync(outputFile, "start_int,end_int,list\n");
+
+        // const redis = new Redis({
+        //     host:process.env.REDIS_HOST,
+        //     port: process.env.REDIS_PORT, // Redis port
+        //     family: process.env.REDIS_IP_FAMILY, // 4 (IPv4) or 6 (IPv6)
+        //     password: process.env.REDIS_PASS,
+        //     db: process.env.REDIS_DB,
+        // });
+        //const listArray = await redis.smembers(redisPrefix + 'lists');
+        //fs.writeFileSync(outputFile, "start_int,end_int,list\n");
         await Promise
             .all(listArray.map( f => downloadFile(f, writer, path.posix.basename(f).replace(/\.(?:ip|net)set/,""))));
         writer.close();
