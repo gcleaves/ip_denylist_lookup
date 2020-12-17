@@ -36,11 +36,14 @@ Digging into the Internet suggested that breaking the IP ranges into non-overlap
   * `NODE_OPTIONS=--max_old_space_size=4096` or similar env variable required.
 * The data in Redis takes about 420M once loaded.
 * The node script uses about 1GB of memory at rest.
-* wait for download and processing, system is ready when you see `IP ranges app listening at...`
+* wait for download and processing, system is ready when you see `ready to serve!`
 * visit http://localhost:3000/192.168.0.1
 * updated lists will be pulled according to given cron schedule
-* it is possible to add or remove lists while the system is running by editing the Redis key `ip_lists:lists`. Changes will take place during the next scheduled update.
-* add files to ./other_lists folder to add your own IP lists
+* create your own "plugins" to add more IP lists
+  * see plugins folder and `plugins.js` for examples
+  * a plugin must add a file to the staging folder
+  * plugin must return a promise which resolves when the plugin is done writing to the staging folder
+  * if the plugin has dependencies you'll want to create a package.json file as well as reference the plugin in the project's main package.json file so that the dependencies are included in the main `npm install`.
 
 ## Gotchas
 * memory limits
@@ -48,9 +51,6 @@ Digging into the Internet suggested that breaking the IP ranges into non-overlap
   * check your Docker VM settings in Windows or Mac, 2GB RAM won't cut it
 
 ## Todo
-* ability to query multiple IP addresses at once.
-* ability to define whether HTTP endpoint should return info in plain text or JSON.
-* ability to upload a file of IPs and get a result file.
 
 -------------------------------------------
 Based on prior work:
