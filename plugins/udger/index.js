@@ -6,8 +6,6 @@ const fs = require('fs');
 const config = require('./config.json');
 const sqlite3 = require('sqlite3').verbose();
 const dbFile = __dirname + '/' + 'udgerdb_v3.dat';
-const rangeFile = __dirname + '/' + 'udger.csv';
-const download = true;
 
 const downloadUdger = async () => {
     console.log("downloading udger");
