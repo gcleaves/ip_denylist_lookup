@@ -1,0 +1,6 @@
+{
+  "name": "ip_denylist_plugin_example",
+  "version": "1.0.0",
+  "dependencies": {},
+  "main": "index.js"
+}
