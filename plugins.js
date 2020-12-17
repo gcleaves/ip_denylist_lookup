@@ -20,11 +20,11 @@ module.exports = [{
     load: example('./staging/example.data.txt'),
     abortOnFail: true
 },
-// {
-//     name: 'udger',
-//     load: udger('./staging/udger.data.txt'),
-//     abortOnFail: true
-// },
+{
+    name: 'udger',
+    load: udger('./staging/udger.data.txt'),
+    abortOnFail: false
+},
 {
     name: 'firehol',
     load: firehol('./staging/firehol.data.txt',fireholLists),
