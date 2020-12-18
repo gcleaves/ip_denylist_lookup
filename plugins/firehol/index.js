@@ -49,6 +49,7 @@ async function downloadFile(fileUrl, writer, tag) {
 }
 
 module.exports = async (outputFile, listArray) => {
+	fs.unlinkSync(outputFile);
     return new Promise(async (resolve, reject) => {
         const writer = fs.createWriteStream(outputFile,{flags:'a'});
         writer.on('close', () => {
