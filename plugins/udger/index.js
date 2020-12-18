@@ -35,7 +35,8 @@ module.exports = async (outputFile, download) => {
         const db = new sqlite3.Database(dbFile);
         db.each("SELECT iplong_from `from`, iplong_to `to`, name from udger_datacenter_range r " +
             "inner join udger_datacenter_list l on r.datacenter_id=l.id limit -1", function(err, row) {
-            const dcName = row.name.replace(/"/g,'\"');
+            let dcName = row.name.replace(/"/g,'\"');
+			dcName = dcName.replace(/,/g,'');
             const csv = row.from + "," + row.to + `,"datacenter|${dcName}"\n`; // -${row.name}
             writer.write(csv);
         }, function() {writer.close()});
