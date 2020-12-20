@@ -1,0 +1,20 @@
+{
+  "geo": [{
+    "country": "US",
+    "city": "Austin",
+    "region": "Texas",
+    "source": "maxmind"
+  }, {
+    "country": "US",
+    "city": "Austin",
+    "region": "Texas",
+    "source": "udger"
+  }],
+  "list": [{
+    "source": "udger",
+    "name": "crawler"
+  }, {
+    "source": "fireol",
+    "name": "abusers_30d"
+  }]
+}

@@ -35,9 +35,9 @@ const lookupIP = (ip) => {
         const long = ipTools.toLong(ip);
         redis.zrangebyscore(redisPrefix + 'ranges', long, '+inf', 'LIMIT', 0, 1).then(answer => {
             const item = answer[0];
-            const [startInt, endInt, ...lists] = item.split(',');
+            const [startInt, endInt, lists] = item.split('|');
             if (long >= startInt && long <= endInt) {
-                response = lists;
+                response = JSON.parse(lists);
                 //console.log(message, ip, response);
                 resolve(response, ip);
             }
@@ -76,18 +76,20 @@ exports.serve = (port, rp, prefix) => {
             response[ip] = (list===null) ? [] : list;
         }));
 
-        if(req.is('application/json')) {
-            res.json(response);
-        } else {
-            for (const ip in response) {
-                let lists = 'error';
-                if(Array.isArray(response[ip])) {
-                    lists = response[ip].join('|');
-                }
-                res.write(`${ip},${lists}\n`);
-            }
-            res.end();
-        }
+        res.json(response);
+
+        // if(req.is('application/json')) {
+        //     res.json(response);
+        // } else {
+        //     for (const ip in response) {
+        //         let lists = 'error';
+        //         if(Array.isArray(response[ip])) {
+        //             lists = response[ip].join('|');
+        //         }
+        //         res.write(`${ip},${lists}\n`);
+        //     }
+        //     res.end();
+        // }
     });
 
     router.get('/upload',(req, res) => {
@@ -119,13 +121,16 @@ exports.serve = (port, rp, prefix) => {
         let ips = [];
         if(req.files.ipList.name.match(/\.json$/)) {
             ips = JSON.parse(fileAsString);
-            contentType = 'application/json';
-            fileName = 'ips.json';
+            // contentType = 'application/json';
+            // fileName = 'ips.json';
         } else {
             ips = fileAsString.split(/,|\r?\n/);
-            contentType = 'text/csv';
-            fileName = 'ips.csv';
+            // contentType = 'text/csv';
+            // fileName = 'ips.csv';
         }
+
+        contentType = 'application/json';
+        fileName = 'ips.json';
 
         await Promise.all(ips.map(async ip => {
             const list = await lookupIP(ip);
@@ -134,14 +139,8 @@ exports.serve = (port, rp, prefix) => {
         res.header('Content-Type', contentType);
         res.attachment(fileName);
 
-        if(fileName==='ips.csv') {
-            for (const i in response) {
-                res.write(`${i},${response[i]}\n`);
-            }
-            res.end();
-        } else {
-            res.send(JSON.stringify(response));
-        }
+        res.send(JSON.stringify(response));
+
     });
 
     router.get('/myip', (req, res) => {
