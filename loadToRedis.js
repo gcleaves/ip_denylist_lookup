@@ -35,7 +35,8 @@ exports.load = (file, redisPrefix, gc) => {
                 separator: ',',
                 mapValues: ({header, index, value}) => {
                     if (header === 'list') {
-                        return value.trim()
+                        if(!value || value=='') return 'unknown';
+                        return value.trim();
                     } else {
                         return parseInt(value);
                     }
@@ -84,8 +85,8 @@ exports.load = (file, redisPrefix, gc) => {
                         console.log(`flattening ${k} of ${scratch.length}`);
                     }
                     if (!(k % 100000)) {
-                        plRes = await pipeline.exec();
-						plRes = null;
+                        await pipeline.exec();
+						//plRes = null;
 						if(gc) forceGC();
                         pipeline = redis.pipeline(); //.client('reply', 'off');
                     }

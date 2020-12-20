@@ -24,6 +24,18 @@ const csvFile = process.env.IP_DOWNLOAD_LOCATION || './ipFile';
 const collectGarbage = process.env.IP_COLLECT_GARBAGE || args.collectGarbage;
 const includePath = __dirname + '/staging';
 
+const concat = async (sourceFile, destination) => {
+    console.log(`concatenating ${sourceFile}`);
+    return new Promise((resolve, reject) => {
+        const source = fs.createReadStream(sourceFile);
+        source.on('close', function() {
+            console.log("finished writing " + sourceFile);
+            resolve();
+        });
+        source.pipe(destination);
+    });
+}
+
 async function main() {
     // run plugins which stage IP lists
     if(args.download) {
@@ -44,16 +56,15 @@ async function main() {
     if(args.process) {
         // concatenate staging lists into 1 file
         fs.writeFileSync(csvFile,"start_int,end_int,list\n");
+
         for(const file of fs.readdirSync(includePath)) {
             const theFile = `${includePath}/${file}`;
             if(file.match(/^\./)) {
                 console.log(`skipping ${theFile}`);
                 continue;
             }
-            console.log(`concatenating ${theFile}`);
-            if(fs.lstatSync(theFile).isFile()) {
-                fs.appendFileSync(csvFile, fs.readFileSync(theFile).toString())
-            }
+            const destination = fs.createWriteStream(csvFile, {flags: 'a'});
+            await concat(theFile, destination);
         }
     }
 
