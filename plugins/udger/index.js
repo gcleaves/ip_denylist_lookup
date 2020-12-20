@@ -5,6 +5,7 @@ const axios = require('axios');
 const fs = require('fs');
 const config = require('./config.json');
 const sqlite3 = require('sqlite3').verbose();
+const ip = require('ip-utils');
 const dbFile = __dirname + '/' + 'udgerdb_v3.dat';
 
 const downloadUdger = async () => {
@@ -33,13 +34,27 @@ module.exports = async (outputFile, download) => {
         const tempFile = __dirname + '/' + 'rth595hg34G4gsdfgnu7865y';
         const writer = fs.createWriteStream(tempFile);
         const db = new sqlite3.Database(dbFile);
-        db.each("SELECT iplong_from `from`, iplong_to `to`, name from udger_datacenter_range r " +
-            "inner join udger_datacenter_list l on r.datacenter_id=l.id limit -1", function(err, row) {
-            let dcName = row.name.replace(/"/g,'\"');
-			dcName = dcName.replace(/,/g,'');
-            const csv = row.from + "," + row.to + `,"datacenter|${dcName}"\n`; // -${row.name}
-            writer.write(csv);
-        }, function() {writer.close()});
+        await Promise.all([
+            new Promise((resolve, reject) => {
+                db.each("SELECT iplong_from `from`, iplong_to `to`, name from udger_datacenter_range r " +
+                    "inner join udger_datacenter_list l on r.datacenter_id=l.id limit -1", function (err, row) {
+                    let dcName = row.name.replace(/"/g, '\"');
+                    dcName = dcName.replace(/,/g, '');
+                    const csv = row.from + "," + row.to + `,"datacenter|${dcName}"\n`; // -${row.name}
+                    writer.write(csv);
+                }, resolve);
+            }),
+            new Promise((resolve, reject) => {
+                db.each("SELECT l.ip, c.ip_classification_code code, l.ip_country_code country, l.ip_city city from udger_ip_list l " +
+                    "inner join udger_ip_class c on l.class_id=c.id limit -1", function (err, row) {
+                    //let dcName = row.name.replace(/"/g, '\"');
+                    //dcName = dcName.replace(/,/g, '');
+                    const csv = `${ip.toLong(row.ip)},${ip.toLong(row.ip)},"${row.code}|${row.country}|${row.city}"\n`; // -${row.name}
+                    writer.write(csv);
+                }, resolve);
+            })
+        ]);
+        writer.close();
 
         return new Promise((resolve, reject) => {
             writer.on('finish', () => {

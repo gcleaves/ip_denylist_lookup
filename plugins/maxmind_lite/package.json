@@ -1,0 +1,11 @@
+{
+  "name": "ip_denylist_plugin_maxmind_lite",
+  "version": "1.0.0",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "ip-utils": "^2.4.0",
+    "csv": "^5",
+    "unzipper": "^0.10.11"
+  },
+  "main": "index.js"
+}

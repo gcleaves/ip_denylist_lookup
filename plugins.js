@@ -1,6 +1,8 @@
+const path = require('path');
 const firehol = require('ip_denylist_plugin_firehol');
 const example = require('ip_denylist_plugin_example');
 const udger = require('ip_denylist_plugin_udger');
+const maxmindLite = require('ip_denylist_plugin_maxmind_lite');
 
 const fireholLists = [
     'https://iplists.firehol.org/files/firehol_level1.netset',
@@ -17,16 +19,18 @@ const fireholLists = [
 
 module.exports = [{
     name: 'example',
-    load: example(__dirname + '/staging/example.data.txt'),
-    abortOnFail: true
-},
-{
-    name: 'udger',
-    load: udger(__dirname + '/staging/udger.data.txt'),
+    load: example(path.join(__dirname,'staging','example.data.txt')),
     abortOnFail: false
-},
-{
+}, {
+    name: 'udger',
+    load: udger(path.join(__dirname,'staging','udger.data.txt')),
+    abortOnFail: false
+}, {
+    name: 'maxmindLite',
+    load: maxmindLite(path.join(__dirname,'staging','maxmind_lite.data.txt')),
+    abortOnFail: false
+}, {
     name: 'firehol',
-    load: firehol(__dirname + '/staging/firehol.data.txt',fireholLists),
+    load: firehol(path.join(__dirname,'staging','firehol.data.txt'), fireholLists),
     abortOnFail: true
 }];
