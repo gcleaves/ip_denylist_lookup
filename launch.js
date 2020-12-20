@@ -55,7 +55,7 @@ async function main() {
 
     if(args.process) {
         // concatenate staging lists into 1 file
-        fs.writeFileSync(csvFile,"start_int,end_int,list\n");
+        fs.writeFileSync(csvFile,"start_int|end_int|list\n");
 
         for(const file of fs.readdirSync(includePath)) {
             const theFile = `${includePath}/${file}`;

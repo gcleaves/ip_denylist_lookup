@@ -16,7 +16,7 @@ const ip2int = (ip) => {
     return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
-const download = async () => {
+const downloadMaxmind = async () => {
     console.log("downloading maxmind");
     const writer = fs.createWriteStream(zipFile);
     const response = await axios({
@@ -84,13 +84,23 @@ const processRanges = async (cities, outputFile) => {
     return new Promise(((resolve, reject) => {
         csvStream.on("data", function(r) {
             const cidrInfo = ip.cidrInfo(r.network);
-            let country = '', city = '';
+            let country = '', city = '', region = '';
             if(cities[r.geoname_id]) {
                 country = cities[r.geoname_id].country_iso_code;
                 city = cities[r.geoname_id].city_name;
+                region = cities[r.geoname_id].subdivision_1_name;
             }
+            const meta = {
+                type: "geo",
+                country: country,
+                city: city,
+                region: region,
+                source: "maxmind"
+            };
+            const metadata = JSON.stringify(meta);
+
             const output = stringify([[Math.min(ip2int(cidrInfo.firstHostAddress),ip2int(cidrInfo.lastHostAddress)),
-                Math.max(ip2int(cidrInfo.firstHostAddress),ip2int(cidrInfo.lastHostAddress)),`${country}|${city}`]], {quoted_match: /\|/}); //
+                Math.max(ip2int(cidrInfo.firstHostAddress),ip2int(cidrInfo.lastHostAddress)),meta]], {delimiter: '|',quote: '|'}); //
             if(city || country) {
                 writeStream.write(output);
             }
@@ -110,9 +120,14 @@ const processRanges = async (cities, outputFile) => {
 // module.exports.processRanges = processRanges;
 // module.exports.extract = extract;
 
-module.exports = async (outputFile) => {
-    await download();
-    await extract();
-    const cities = await loadCities();
-    return processRanges(cities,outputFile);
+module.exports = async (outputFile, download) => {
+    let interval;
+    if(download===undefined || download==true) download = true;
+    try {
+        interval = setInterval(()=>console.log("still working on maxmind_lite"),5000);
+        if(download) await downloadMaxmind();
+        await extract();
+        const cities = await loadCities();
+        return processRanges(cities,outputFile).then(()=>clearInterval(interval));
+    } finally {}
 }

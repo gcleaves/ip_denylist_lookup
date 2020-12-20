@@ -38,18 +38,43 @@ module.exports = async (outputFile, download) => {
             new Promise((resolve, reject) => {
                 db.each("SELECT iplong_from `from`, iplong_to `to`, name from udger_datacenter_range r " +
                     "inner join udger_datacenter_list l on r.datacenter_id=l.id limit -1", function (err, row) {
-                    let dcName = row.name.replace(/"/g, '\"');
-                    dcName = dcName.replace(/,/g, '');
-                    const csv = row.from + "," + row.to + `,"datacenter|${dcName}"\n`; // -${row.name}
+                    const meta = {
+                        type: "list",
+                        source: "udger",
+                        name: "datacenter",
+                        meta: {
+                            "datacenter_name": row.name
+                        }
+                    };
+                    const metadata = JSON.stringify(meta);
+
+                    //let dcName = row.name.replace(/"/g, '\"');
+                    //dcName = dcName.replace(/,/g, '');
+                    const csv = row.from + "|" + row.to + "|" + metadata + "\n"; // -${row.name}
                     writer.write(csv);
                 }, resolve);
             }),
             new Promise((resolve, reject) => {
                 db.each("SELECT l.ip, c.ip_classification_code code, l.ip_country_code country, l.ip_city city from udger_ip_list l " +
                     "inner join udger_ip_class c on l.class_id=c.id limit -1", function (err, row) {
-                    //let dcName = row.name.replace(/"/g, '\"');
-                    //dcName = dcName.replace(/,/g, '');
-                    const csv = `${ip.toLong(row.ip)},${ip.toLong(row.ip)},"${row.code}|${row.country}|${row.city}"\n`; // -${row.name}
+                    const meta = {
+                        type: "geo",
+                        country: row.country,
+                        city: row.city,
+                        source: "udger"
+                    };
+                    let metadata = JSON.stringify(meta);
+                    let csv = `${ip.toLong(row.ip)}|${ip.toLong(row.ip)}|` + metadata + "\n";
+                    writer.write(csv);
+
+                    delete meta.country;
+                    delete meta.city;
+                    delete meta.region;
+                    meta.type = "list";
+                    meta.source = "udger";
+                    meta.name = row.code;
+                    metadata = JSON.stringify(meta);
+                    csv = `${ip.toLong(row.ip)}|${ip.toLong(row.ip)}|` + metadata + "\n";
                     writer.write(csv);
                 }, resolve);
             })
@@ -60,11 +85,10 @@ module.exports = async (outputFile, download) => {
             writer.on('finish', () => {
                 console.log('finished extracting datacenter IPs');
                 fs.renameSync(tempFile, outputFile);
+                clearInterval(interval);
                 resolve('udger');
             });
             writer.on('error', reject);
         });
-    } finally {
-        clearInterval(interval);
-    }
+    } finally {}
 }

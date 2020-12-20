@@ -32,17 +32,20 @@ exports.load = (file, redisPrefix, gc) => {
         redis.del(tempKey);
         fs.createReadStream(file, {endX: 10000})
             .pipe(csv({
-                separator: ',',
+                separator: '|',
+                quote: '#~€',
                 mapValues: ({header, index, value}) => {
                     if (header === 'list') {
-                        if(!value || value=='') return 'unknown';
-                        return value.trim();
+                        //if(!value || value=='') return 'unknown';
+                        //return value.trim();
+                        return value;
                     } else {
                         return parseInt(value);
                     }
                 }
             }))
             .on('data', (r) => {
+                //console.log(r);
                 k++;
                 if (!(k % 10000)) {
                     //process.stdout.write(`reading CSV line: ${k}\r`);
@@ -72,6 +75,7 @@ exports.load = (file, redisPrefix, gc) => {
                     return 0;
                 });
                 console.log('Sorting finished');
+                //console.log(scratch);
 
                 let s = [];
                 let n;
@@ -111,7 +115,19 @@ exports.load = (file, redisPrefix, gc) => {
 
                     if (n <= m && s.length) {
 						s = [...new Set(s)];
-                        pipeline.zadd(tempKey, m, `${n},${m},${s.join(',')}`);
+						//console.log(s);
+
+						let data = {geo: [], list: []};
+						for(const i of s) {
+						    //console.log(i);
+						    const j = JSON.parse(i);
+						    const type = j.type;
+						    delete j.type;
+						    //console.log(j);
+						    data[type].push(j);
+                        }
+
+                        pipeline.zadd(tempKey, m, `${n}|${m}|${JSON.stringify(data)}`);
                     }
                 }
                 await pipeline.exec();
