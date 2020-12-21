@@ -2,6 +2,7 @@
 
 const ipTools = require('ip-utils');
 const Redis = require("ioredis");
+const config = require("./config.json");
 const redis = new Redis({
     host:process.env.REDIS_HOST,
     port: process.env.REDIS_PORT, // Redis port
@@ -12,6 +13,8 @@ const redis = new Redis({
 const express = require('express');
 const readline = require('readline');
 const stream = require('stream');
+const stringifySync = require('csv/lib/sync').stringify;
+const stringify = require('csv').stringify;
 const app = express();
 const fileUpload = require('express-fileupload');
 const router = express.Router();
@@ -52,7 +55,7 @@ exports.serve = (port, rp, prefix) => {
     prefix = prefix || '/';
     router.get('/', (req, res) => res.redirect('/myip'));
 
-    router.get(['/help','/docs'], (req,res) => res.redirect('https://documenter.getpostman.com/view/212281/TVmQcarE'));
+    router.get(['/help','/docs'], (req,res) => res.redirect(config.docs_url));
 
     router.get('/favicon.ico', (req, res) => res.status(204).end());
 
@@ -76,20 +79,36 @@ exports.serve = (port, rp, prefix) => {
             response[ip] = (list===null) ? [] : list;
         }));
 
-        res.json(response);
+        //res.json(response);
 
-        // if(req.is('application/json')) {
-        //     res.json(response);
-        // } else {
-        //     for (const ip in response) {
-        //         let lists = 'error';
-        //         if(Array.isArray(response[ip])) {
-        //             lists = response[ip].join('|');
-        //         }
-        //         res.write(`${ip},${lists}\n`);
-        //     }
-        //     res.end();
-        // }
+        if(req.is('application/json')) {
+            res.json(response);
+        } else {
+            // console.log('post csv');
+            // console.log(response);
+            res.header('Content-Type', 'text/plain');
+            const header = (![0, '0', false, 'false'].includes(req.query.header));
+            const columns = ['ip','list','country'];
+            const stringifier = stringify({columns: columns, header: header});
+            stringifier.on('readable', function(){
+                let row;
+                while(row = stringifier.read()){
+                    res.write(row);
+                }
+            });
+            stringifier.on('error', function(err){
+                console.error(err.message)
+            })
+            stringifier.on('finish',() => res.end());
+
+            for (const ip in response) {
+                let lists = '', countries = '';
+                if(response[ip].list) lists = response[ip].list.map(l => l.name).join('|');
+                if(response[ip].geo) countries = response[ip].geo.map(l => l.country).join('|');
+                stringifier.write([ip,lists,countries]);
+            }
+            stringifier.end();
+        }
     });
 
     router.get('/upload',(req, res) => {
@@ -119,44 +138,74 @@ exports.serve = (port, rp, prefix) => {
         let contentType;
         let fileName;
         let ips = [];
+        let stringifier;
+        let fileType;
         if(req.files.ipList.name.match(/\.json$/)) {
+            fileType = 'json';
             ips = JSON.parse(fileAsString);
-            // contentType = 'application/json';
-            // fileName = 'ips.json';
+            contentType = 'application/json';
+            fileName = 'ips.json';
         } else {
+            fileType = 'csv';
             ips = fileAsString.split(/,|\r?\n/);
-            // contentType = 'text/csv';
-            // fileName = 'ips.csv';
+            contentType = 'text/csv';
+            fileName = 'ips.csv';
+            const header = (![0, '0', false, 'false'].includes(req.query.header));
+            const columns = ['ip','list','country'];
+            stringifier = stringify({columns: columns, header: header});
+            stringifier.on('readable', function(){
+                let row;
+                while(row = stringifier.read()){
+                    res.write(row);
+                }
+            });
+            stringifier.on('error', function(err){
+                console.error(err.message)
+            })
+            stringifier.on('finish',() => res.end());
         }
 
-        contentType = 'application/json';
-        fileName = 'ips.json';
-
+        res.header('Content-Type', contentType);
+        res.attachment(fileName);
         await Promise.all(ips.map(async ip => {
             const list = await lookupIP(ip);
             response[ip] = (list===null) ? [] : list;
-        }));
-        res.header('Content-Type', contentType);
-        res.attachment(fileName);
 
-        res.send(JSON.stringify(response));
+            if(fileType==='csv') {
+                let lists = '', countries = '';
+                if (response[ip].list) lists = response[ip].list.map(l => l.name).join('|');
+                if (response[ip].geo) countries = response[ip].geo.map(l => l.country).join('|');
+                stringifier.write([ip, lists, countries]);
+            }
+        }));
+        if(fileType==='csv') stringifier.end();
+        else res.send(JSON.stringify(response));
 
     });
 
     router.get('/myip', (req, res) => {
         const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         const response = {};
-        response.origin = ip;
-        lookupIP(ip).then( result => {
-            response.result = result;
-            res.send(response);
+        response.ip = ip;
+        lookupIP(ip).then( ipLists => {
+            response.result = ipLists || {};
+
+            if([1,'1',true,'true'].includes(req.query.csv)) {
+                const header = (![0, '0', false, 'false'].includes(req.query.header));
+                res.header('Content-Type', 'text/plain');
+                const columns = ['ip','list','country'];
+                let lists = '', countries = '';
+                if(ipLists.list) lists = ipLists.list.map(l => l.name).join('|');
+                if(ipLists.geo) countries = ipLists.geo.map(l => l.country).join('|');
+                stringify([[ip,lists,countries]],{columns: columns, header: header},(err,output) => res.send(output));
+            } else {
+                res.json(response);
+            }
         })
     });
 
     router.get('/:ip', (req, res) => {
-        let start = new Date();
         const ip = req.params.ip;
-        let message = `${ip}:`;
         let response = [];
 
         lookupIP(ip).then( ipLists => {
@@ -168,9 +217,18 @@ exports.serve = (port, rp, prefix) => {
             } else {
                 response = ipLists;
             }
-            message += response;
-            res.json(response);
-            //console.log(message);
+
+            if([1,'1',true,'true'].includes(req.query.csv)) {
+                const header = (![0, '0', false, 'false'].includes(req.query.header));
+                res.header('Content-Type', 'text/plain');
+                const columns = ['list','country'];
+                let lists = '', countries = '';
+                if(ipLists.list) lists = ipLists.list.map(l => l.name).join('|');
+                if(ipLists.geo) countries = ipLists.geo.map(l => l.country).join('|');
+                stringify([[lists,countries]],{columns: columns, header: header},(err,output) => res.send(output));
+            } else {
+                res.json(response);
+            }
         });
     });
 
