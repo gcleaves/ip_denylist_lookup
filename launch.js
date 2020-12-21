@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const CronJob = require('cron').CronJob;
+const {format} = require('date-fns');
 const args = require('minimist')(process.argv.slice(2), {
     boolean: [
         'download',
@@ -23,13 +24,14 @@ const redisPrefix = process.env.IP_REDIS_PREFIX || 'ip_lists:';
 const csvFile = process.env.IP_DOWNLOAD_LOCATION || './ipFile';
 const collectGarbage = process.env.IP_COLLECT_GARBAGE || args.collectGarbage;
 const includePath = __dirname + '/staging';
+const nowFormat = () => format(new Date(),'yyyy-MM-dd HH:mm:ss');
 
 const concat = async (sourceFile, destination) => {
-    console.log(`concatenating ${sourceFile}`);
+    console.log(`${nowFormat()}| concatenating ${sourceFile}`);
     return new Promise((resolve, reject) => {
         const source = fs.createReadStream(sourceFile);
         source.on('close', function() {
-            console.log("finished writing " + sourceFile);
+            console.log(nowFormat() + "| finished writing " + sourceFile);
             resolve();
         });
         source.pipe(destination);
@@ -49,7 +51,7 @@ async function main() {
             }
             k++;
         }
-        console.log("plugins done.");
+        console.log(nowFormat() + "| plugins done.");
         console.log(results);
     }
 
@@ -60,7 +62,7 @@ async function main() {
         for(const file of fs.readdirSync(includePath)) {
             const theFile = `${includePath}/${file}`;
             if(file.match(/^\./)) {
-                console.log(`skipping ${theFile}`);
+                console.log(nowFormat() + `| skipping ${theFile}`);
                 continue;
             }
             const destination = fs.createWriteStream(csvFile, {flags: 'a'});
@@ -71,7 +73,7 @@ async function main() {
     if(args.load) {
         const load = require('./loadToRedis').load;
         await load(csvFile, redisPrefix, collectGarbage);
-        console.log("loading done.");
+        console.log(nowFormat() + "| loading done.");
     }
 
     return 'success';
@@ -87,5 +89,5 @@ const job = new CronJob(process.env.IP_CRON || '5 2 * * *', async function() {
 });
 job.start();
 
-main().then(()=>console.log("ready to serve!"));
+main().then(()=>console.log(nowFormat() + "| ready to serve!"));
 

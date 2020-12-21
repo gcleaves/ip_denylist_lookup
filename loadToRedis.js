@@ -3,6 +3,7 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const Redis = require("ioredis");
 const { format} = require('date-fns');
+const nowFormat = () => format(new Date(),'yyyy-MM-dd HH:mm:ss');
 
 function forceGC() {
    if (global.gc) {
@@ -49,7 +50,7 @@ exports.load = (file, redisPrefix, gc) => {
                 k++;
                 if (!(k % 10000)) {
                     //process.stdout.write(`reading CSV line: ${k}\r`);
-                    console.log(`reading CSV line: ${k}`);
+                    console.log(nowFormat() + `| reading CSV line: ${k}`);
                 }
                 scratch.push({n: r.start_int, a: r.list, e: false});
                 scratch.push({n: r.end_int, a: r.list, e: true});
@@ -60,9 +61,9 @@ exports.load = (file, redisPrefix, gc) => {
                     "size": k,
                     "lists": await redis.smembers(redisPrefix + 'lists')
                 }));
-                console.log('CSV file successfully processed %s lines', k);
-                console.log(scratch.length);
-                console.log('Sorting...');
+                console.log(nowFormat() + '| CSV file successfully processed %s lines', k);
+                console.log(nowFormat() + "| " + scratch.length);
+                console.log(nowFormat() + '| Sorting...');
                 scratch.sort((a, b) => {
                     if (a.n < b.n) return -1;
                     if (a.n > b.n) return 1;
@@ -74,7 +75,7 @@ exports.load = (file, redisPrefix, gc) => {
                     }
                     return 0;
                 });
-                console.log('Sorting finished');
+                console.log(nowFormat() + '| Sorting finished');
                 //console.log(scratch);
 
                 let s = [];
@@ -86,7 +87,7 @@ exports.load = (file, redisPrefix, gc) => {
                 for (let k = 0; k < scratch.length - 1; k++) {
                     if (!(k % 10000)) {
                         //process.stdout.write(`flattening ${k} of ${scratch.length}\r`);
-                        console.log(`flattening ${k} of ${scratch.length}`);
+                        console.log(nowFormat() + `| flattening ${k} of ${scratch.length}`);
                     }
                     if (!(k % 100000)) {
                         await pipeline.exec();
