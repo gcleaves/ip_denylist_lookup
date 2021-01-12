@@ -28,7 +28,11 @@ module.exports = async (outputFile, download) => {
     const interval = setInterval(()=>console.log("still working on udger"),5000);
     try {
         if(download===undefined || download==true) download = true;
-        if(download) await downloadUdger();
+        if(download) await downloadUdger().catch(e=>{
+            console.log('udger download error.');
+            clearInterval(interval);
+            throw "udger failed: " + e.message;
+        });
         console.log('finished downloading udger');
         console.log('extracting datacenter IPs');
         const tempFile = __dirname + '/' + 'rth595hg34G4gsdfgnu7865y';
@@ -88,7 +92,10 @@ module.exports = async (outputFile, download) => {
                 clearInterval(interval);
                 resolve('udger');
             });
-            writer.on('error', reject);
+            writer.on('error', () => {
+                clearInterval(interval);
+                reject("udger failed");
+            });
         });
     } finally {}
 }
