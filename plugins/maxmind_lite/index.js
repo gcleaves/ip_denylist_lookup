@@ -11,6 +11,7 @@ const parse = require('csv-parser');
 const stringify = require('csv-stringify/lib/sync');
 const config = require('./config.json');
 const zipFile = path.join(__dirname,'maxmind.zip');
+let interval;
 
 const ip2int = (ip) => {
     return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
@@ -106,9 +107,12 @@ const processRanges = async (cities, outputFile) => {
             }
         }).on("end", function(){
             console.log("done");
+            clearInterval(interval);
             resolve('maxmind_lite');
         }).on("error", function(error){
             console.log(error)
+            clearInterval(interval);
+            reject('maxmind_lite failed: ' + error.message);
         });
         readStream.pipe(csvStream);
     }));
@@ -121,13 +125,13 @@ const processRanges = async (cities, outputFile) => {
 // module.exports.extract = extract;
 
 module.exports = async (outputFile, download) => {
-    let interval;
+
     if(download===undefined || download==true) download = true;
     try {
         interval = setInterval(()=>console.log("still working on maxmind_lite"),5000);
         if(download) await downloadMaxmind();
         await extract();
         const cities = await loadCities();
-        return processRanges(cities,outputFile).then(()=>clearInterval(interval));
+        return processRanges(cities,outputFile); // .then(()=>clearInterval(interval))
     } finally {}
 }
