@@ -42,12 +42,12 @@ async function main() {
     // run plugins which stage IP lists
     if(args.download) {
         const plugins = require('./plugins');
-        const results = await Promise.allSettled(plugins.map(p=>p.load));
+        const results = await Promise.allSettled(plugins.map(p=>p.load()));
         let k = 0;
         for(const result of results) {
             if(result.status==='rejected' && plugins[k].abortOnFail===true) {
                 console.error(`Abort: plugin [${plugins[k].name}] has been set to abort process on fail.`);
-                throw result.reason;
+                throw Error(result.reason);
             }
             k++;
         }
@@ -89,5 +89,8 @@ const job = new CronJob(process.env.IP_CRON || '5 2 * * *', async function() {
 });
 job.start();
 
-main().then(()=>console.log(nowFormat() + "| ready to serve!"));
+main().then(()=>console.log(nowFormat() + "| ready to serve!")).catch(e => {
+    console.error(e);
+    process.exit(1);
+});
 

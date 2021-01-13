@@ -29,7 +29,7 @@ module.exports = async (outputFile, download) => {
     try {
         if(download===undefined || download==true) download = true;
         if(download) await downloadUdger().catch(e=>{
-            console.log('udger download error.');
+            console.error('udger download error.');
             clearInterval(interval);
             throw "udger failed: " + e.message;
         });
@@ -94,6 +94,7 @@ module.exports = async (outputFile, download) => {
             });
             writer.on('error', () => {
                 clearInterval(interval);
+                console.error('udger error.');
                 reject("udger failed");
             });
         });

@@ -43,7 +43,7 @@ async function downloadFile(fileUrl, writer, tag) {
             }).on('error',(e) => {
                 error = e;
                 writer.close();
-                reject(e);
+                reject("firehol failure: " + e.message);
             }).on('close',()=> {
                 if (!error) {
 					console.log('finished ' + fileUrl);
@@ -68,9 +68,15 @@ module.exports = async (outputFile, listArray) => {
             clearInterval(interval);
             resolve("firehol");
         });
+        writer.on('error', () => {
+            clearInterval(interval);
+            console.error('firehol error.');
+            reject("firehol failed");
+        });
 
         await Promise
-            .all(listArray.map( f => downloadFile(f, writer, path.posix.basename(f).replace(/\.(?:ip|net)set/,""))));
+            .all(listArray.map( f => downloadFile(f, writer, path.posix.basename(f).replace(/\.(?:ip|net)set/,""))))
+            .catch( e => reject("firehol failure: " + e.message));
         writer.close();
     });
 };
