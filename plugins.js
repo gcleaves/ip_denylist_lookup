@@ -17,20 +17,33 @@ const fireholLists = [
     'https://iplists.firehol.org/files/firehol_anonymous.netset'
 ];
 
-module.exports = [{
-    name: 'example',
-    load: example(path.join(__dirname,'staging','example.data.txt')),
-    abortOnFail: false
-}, {
-    name: 'udger',
-    load: udger(path.join(__dirname,'staging','udger.data.txt')),
-    abortOnFail: false
-}, {
-    name: 'maxmindLite',
-    load: maxmindLite(path.join(__dirname,'staging','maxmind_lite.data.txt')),
-    abortOnFail: false
-}, {
-    name: 'firehol',
-    load: firehol(path.join(__dirname,'staging','firehol.data.txt'), fireholLists),
-    abortOnFail: true
-}];
+module.exports = [
+    {
+        name: 'example',
+        load() {
+            return example(path.join(__dirname,'staging','example.data.txt'))
+        },
+        abortOnFail: false
+    },
+    {
+        name: 'udger',
+        load() {
+            return udger(path.join(__dirname,'staging','udger.data.txt'))
+        },
+        abortOnFail: false
+    },
+    {
+        name: 'maxmindLite',
+        load() {
+            return maxmindLite(path.join(__dirname,'staging','maxmind_lite.data.txt'))
+        },
+        abortOnFail: false
+    },
+    {
+        name: 'firehol',
+        load() {
+            return firehol(path.join(__dirname,'staging','firehol.data.txt'), fireholLists)
+        },
+        abortOnFail: true
+    }
+];

@@ -116,16 +116,9 @@ const processRanges = async (cities, outputFile) => {
         });
         readStream.pipe(csvStream);
     }));
-
 };
 
-// module.exports.download = download;
-// module.exports.loadCities = loadCities;
-// module.exports.processRanges = processRanges;
-// module.exports.extract = extract;
-
 module.exports = async (outputFile, download) => {
-
     if(download===undefined || download==true) download = true;
     try {
         interval = setInterval(()=>console.log("still working on maxmind_lite"),5000);
