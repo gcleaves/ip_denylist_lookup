@@ -2,7 +2,8 @@ const path = require('path');
 const firehol = require('ip_denylist_plugin_firehol');
 const example = require('ip_denylist_plugin_example');
 const udger = require('ip_denylist_plugin_udger');
-const maxmindLite = require('ip_denylist_plugin_maxmind_lite');
+const maxmindLiteCity = require('ip_denylist_plugin_maxmind_lite_city');
+const maxmindLiteASN = require('ip_denylist_plugin_maxmind_lite_asn');
 
 const fireholLists = [
     'https://iplists.firehol.org/files/firehol_level1.netset',
@@ -33,9 +34,16 @@ module.exports = [
         abortOnFail: false
     },
     {
-        name: 'maxmindLite',
+        name: 'maxmindLiteCity',
         load() {
-            return maxmindLite(path.join(__dirname,'staging','maxmind_lite.data.txt'))
+            return maxmindLiteCity(path.join(__dirname,'staging','maxmind_lite_city.data.txt'))
+        },
+        abortOnFail: false
+    },
+    {
+        name: 'maxmindLiteASN',
+        load() {
+            return maxmindLiteASN(path.join(__dirname,'staging','maxmind_lite_asn.data.txt'))
         },
         abortOnFail: false
     },
