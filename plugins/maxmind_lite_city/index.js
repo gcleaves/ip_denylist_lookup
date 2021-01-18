@@ -10,7 +10,8 @@ const unzipper = require('unzipper');
 const parse = require('csv-parser');
 const stringify = require('csv-stringify/lib/sync');
 const config = require('./config.json');
-const zipFile = path.join(__dirname,'maxmind_city.zip');
+const pluginName = 'maxmind_lite_city';
+const zipFile = path.join(__dirname,`${pluginName}.zip`);
 let interval;
 
 const ip2int = (ip) => {
@@ -18,7 +19,7 @@ const ip2int = (ip) => {
 }
 
 const downloadMaxmind = async () => {
-    console.log("downloading maxmind_lite_city");
+    console.log(`downloading ${pluginName}`);
     const writer = fs.createWriteStream(zipFile);
     const response = await axios({
         method: 'get',
@@ -105,13 +106,13 @@ const processRanges = async (cities, outputFile) => {
                 writeStream.write(output);
             }
         }).on("end", function(){
-            console.log("done");
+            console.log(`${pluginName} done.`);
             clearInterval(interval);
-            resolve('maxmind_lite_city');
+            resolve(pluginName);
         }).on("error", function(error){
             console.log(error)
             clearInterval(interval);
-            reject('maxmind_lite failed: ' + error.message);
+            reject(`${pluginName} failed: ` + error.message);
         });
         readStream.pipe(csvStream);
     }));
@@ -120,7 +121,7 @@ const processRanges = async (cities, outputFile) => {
 module.exports = async (outputFile, download) => {
     if(download===undefined || download==true) download = true;
     try {
-        interval = setInterval(()=>console.log("still working on maxmind_lite_city"),5000);
+        interval = setInterval(()=>console.log(`still working on ${pluginName}`),5000);
         if(download) await downloadMaxmind();
         await extract();
         const cities = await loadCities();
