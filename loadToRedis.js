@@ -125,7 +125,7 @@ exports.load = (file, redisPrefix, gc) => {
 						    const type = j.type;
 						    delete j.type;
 						    //console.log(j);
-							if(!data[type]) data[type] = [];
+                            if(!data[type]) data[type] = [];
 						    data[type].push(j);
                         }
 
