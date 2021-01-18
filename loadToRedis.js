@@ -34,7 +34,7 @@ exports.load = (file, redisPrefix, gc) => {
         fs.createReadStream(file, {endX: 10000})
             .pipe(csv({
                 separator: '|',
-                quote: '#~€',
+                quote: '~',
                 mapValues: ({header, index, value}) => {
                     if (header === 'list') {
                         //if(!value || value=='') return 'unknown';
@@ -118,13 +118,14 @@ exports.load = (file, redisPrefix, gc) => {
 						s = [...new Set(s)];
 						//console.log(s);
 
-						let data = {geo: [], list: []};
+						let data = {}; // geo: [], list: [], asn: []
 						for(const i of s) {
 						    //console.log(i);
 						    const j = JSON.parse(i);
 						    const type = j.type;
 						    delete j.type;
 						    //console.log(j);
+							if(!data[type]) data[type] = [];
 						    data[type].push(j);
                         }
 

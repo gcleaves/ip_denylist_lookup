@@ -39,19 +39,19 @@ module.exports = [
             return maxmindLiteCity(path.join(__dirname,'staging','maxmind_lite_city.data.txt'))
         },
         abortOnFail: false
-    },
+    }, 
     {
-        name: 'maxmindLiteASN',
-        load() {
-            return maxmindLiteASN(path.join(__dirname,'staging','maxmind_lite_asn.data.txt'))
+       name: 'maxmindLiteASN',
+       load() {
+           return maxmindLiteASN(path.join(__dirname,'staging','maxmind_lite_asn.data.txt'))
         },
         abortOnFail: false
-    },
+    }, 
     {
         name: 'firehol',
         load() {
             return firehol(path.join(__dirname,'staging','firehol.data.txt'), fireholLists)
         },
         abortOnFail: true
-    }
+    } 
 ];
