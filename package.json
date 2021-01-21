@@ -20,6 +20,7 @@
     "ioredis": "^4.19.1",
     "ip_denylist_plugin_example": "file:./plugins/example",
     "ip_denylist_plugin_firehol": "file:./plugins/firehol",
+    "ip_denylist_plugin_firehol_worker": "file:./plugins/firehol_worker",
     "ip_denylist_plugin_maxmind_lite_asn": "file:./plugins/maxmind_lite_asn",
     "ip_denylist_plugin_maxmind_lite_city": "file:./plugins/maxmind_lite_city",
     "ip_denylist_plugin_udger": "file:./plugins/udger",

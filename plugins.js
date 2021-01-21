@@ -1,5 +1,6 @@
 const path = require('path');
 const firehol = require('ip_denylist_plugin_firehol');
+const firehol_worker = require('ip_denylist_plugin_firehol_worker');
 const example = require('ip_denylist_plugin_example');
 const udger = require('ip_denylist_plugin_udger');
 const udgerStale = require('ip_denylist_plugin_udger_stale');
@@ -20,13 +21,13 @@ const fireholLists = [
 ];
 
 module.exports = [
-    // {
-    //     name: 'example',
-    //     load() {
-    //         return example(path.join(__dirname,'staging','example.data.txt'))
-    //     },
-    //     abortOnFail: false
-    // },
+    {
+        name: 'example',
+        load() {
+            return example(path.join(__dirname,'staging','example.data.txt'))
+        },
+        abortOnFail: false
+    },
     {
         name: 'udger',
         load() {
@@ -41,25 +42,26 @@ module.exports = [
         },
         abortOnFail: true
     },
-    // {
-    //     name: 'maxmindLiteCity',
-    //     load() {
-    //         return maxmindLiteCity(path.join(__dirname,'staging','maxmind_lite_city.data.txt'))
-    //     },
-    //     abortOnFail: false
-    // },
-    // {
-    //    name: 'maxmindLiteASN',
-    //    load() {
-    //        return maxmindLiteASN(path.join(__dirname,'staging','maxmind_lite_asn.data.txt'))
-    //     },
-    //     abortOnFail: false
-    // },
-    // {
-    //     name: 'firehol',
-    //     load() {
-    //         return firehol(path.join(__dirname,'staging','firehol.data.txt'), fireholLists)
-    //     },
-    //     abortOnFail: true
-    // }
+    {
+        name: 'maxmindLiteCity',
+        load() {
+            return maxmindLiteCity(path.join(__dirname,'staging','maxmind_lite_city.data.txt'))
+        },
+        abortOnFail: false
+    },
+    {
+       name: 'maxmindLiteASN',
+       load() {
+           return maxmindLiteASN(path.join(__dirname,'staging','maxmind_lite_asn.data.txt'))
+        },
+        abortOnFail: false
+    },
+    {
+        name: 'firehol',
+        load() {
+            //return 1;
+            return firehol(path.join(__dirname,'staging','firehol.data.txt'), fireholLists);
+        },
+        abortOnFail: true
+    }
 ];

@@ -9,18 +9,19 @@ function ip2int(ip) {
     return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 async function downloadFile(fileUrl, writer, tag) {
-	console.log('starting ' + fileUrl);
-	const meta = {
-	    type: "list",
+    console.log('starting ' + fileUrl);
+    const meta = {
+        type: "list",
         name: tag,
         source: "firehol"
     };
-	const metadata = JSON.stringify(meta);
+    const metadata = JSON.stringify(meta);
 
     return axios({
         method: 'get',
         url: fileUrl,
         responseType: 'stream',
+        timeout: 10000
     }).then(response => {
         return new Promise((resolve, reject) => {
             let error = null;
@@ -46,12 +47,12 @@ async function downloadFile(fileUrl, writer, tag) {
                 reject("firehol failure: " + e.message);
             }).on('close',()=> {
                 if (!error) {
-					console.log('finished ' + fileUrl);
+                    console.log('finished ' + fileUrl);
                     resolve(true);
                 }
             });
         });
-    });
+    }).catch(error=>{throw Error(`firehol error code ${error.code} with file ${fileUrl}: ${error.message}`)});
 }
 
 module.exports = async (outputFile, listArray) => {
@@ -74,9 +75,20 @@ module.exports = async (outputFile, listArray) => {
             reject("firehol failed");
         });
 
-        await Promise
-            .all(listArray.map( f => downloadFile(f, writer, path.posix.basename(f).replace(/\.(?:ip|net)set/,""))))
-            .catch( e => reject("firehol failure: " + e.message));
-        writer.close();
+        let timeout = false;
+        await Promise.race([
+            Promise
+                .all(listArray.map( f => downloadFile(f, writer, path.posix.basename(f).replace(/\.(?:ip|net)set/,"")))),
+            new Promise((resolve, reject) => {
+                setTimeout(()=>{
+                    timeout = true;
+                    resolve();
+                },5 * 60 * 1000)
+            })
+        ]);
+        if (timeout) {
+            clearInterval(interval);
+            throw Error("firehol_worker timeout");
+        }
     });
 };

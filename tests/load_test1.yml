@@ -1,0 +1,21 @@
+config:
+  target: "https://ip.gcleaves.com"
+  phases:
+    - duration: 30
+      arrivalRate: 2
+      maxVusers: 10
+      name: Warm up
+  payload:
+    # Load search keywords from an external CSV file and make them available
+    # to virtual user scenarios as variable "keywords":
+    path: "ips.csv"
+    fields:
+      - "ip"
+scenarios:
+  # We define one scenario:
+  - name: "get single ip"
+    flow:
+      - loop:
+        - get:
+            url: "/{{ ip }}"
+        count: 10000

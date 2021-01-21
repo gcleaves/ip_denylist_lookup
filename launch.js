@@ -42,17 +42,18 @@ async function main() {
     // run plugins which stage IP lists
     if(args.download) {
         const plugins = require('./plugins');
-        const results = await Promise.allSettled(plugins.map(p=>p.load()));
+        const results = await Promise.allSettled(plugins.map(p=>p.load())).catch(error=>console.log(error));
+        console.log(results);
         let k = 0;
         for(const result of results) {
             if(result.status==='rejected' && plugins[k].abortOnFail===true) {
                 console.error(`Abort: plugin [${plugins[k].name}] has been set to abort process on fail.`);
-                throw Error(result.reason);
+                throw result;
             }
             k++;
         }
         console.log(nowFormat() + "| plugins done.");
-        console.log(results);
+
     }
 
     if(args.process) {
