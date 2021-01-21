@@ -8,20 +8,24 @@ const util = require('util');
 function ip2int(ip) {
     return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
+function randomIntFromInterval(min, max) { // min and max included 
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
 async function downloadFile(fileUrl, writer, tag) {
-    console.log('starting ' + fileUrl);
+    await new Promise((resolve,reject)=>setTimeout(_=>resolve(),randomIntFromInterval(0,10)*1000));
+	
+	console.log('starting ' + fileUrl);
     const meta = {
         type: "list",
         name: tag,
         source: "firehol"
     };
     const metadata = JSON.stringify(meta);
-
     return axios({
         method: 'get',
         url: fileUrl,
         responseType: 'stream',
-        timeout: 10000
+        timeout: 20000
     }).then(response => {
         return new Promise((resolve, reject) => {
             let error = null;
@@ -85,10 +89,16 @@ module.exports = async (outputFile, listArray) => {
                     resolve();
                 },5 * 60 * 1000)
             })
-        ]);
+        ]).catch(error=>{
+			clearInterval(interval);
+			console.error(error);
+			reject(error);
+		});
         if (timeout) {
             clearInterval(interval);
-            throw Error("firehol_worker timeout");
+			console.error("firehol timeout");
+			reject("firehol timeout");
+            //throw Error("firehol_worker timeout");
         }
     });
 };
