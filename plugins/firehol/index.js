@@ -100,5 +100,6 @@ module.exports = async (outputFile, listArray) => {
 			reject("firehol timeout");
             //throw Error("firehol_worker timeout");
         }
+		writer.close();
     });
 };
