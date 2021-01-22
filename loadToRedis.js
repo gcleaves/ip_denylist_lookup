@@ -46,6 +46,13 @@ if(isMainThread) {
                 family: process.env.REDIS_IP_FAMILY, // 4 (IPv4) or 6 (IPv6)
                 password: process.env.REDIS_PASS,
                 db: process.env.REDIS_DB,
+                retryStrategy(times) {
+                    const delay = Math.min(times * 500, 10000);
+                    console.error("ioredis delay ms: " + delay);
+                    if(times > 20) throw Error("too many redis reconnect attempts");
+                    return delay;
+                },
+                maxRetriesPerRequest: null // don't skip any commands, wait until redis is online again
             }); // uses defaults unless given configuration object
             const tempKey = 'arfa45e13grh785gEV4wfw$WF7h';
             redis.del(tempKey);
@@ -99,7 +106,6 @@ if(isMainThread) {
                     let s = [];
                     let n;
                     let m;
-                    let plRes;
 
                     let pipeline = redis.pipeline();
                     for (let k = 0; k < scratch.length - 1; k++) {
@@ -108,8 +114,14 @@ if(isMainThread) {
                             console.log(nowFormat() + `| flattening ${k} of ${scratch.length}`);
                         }
                         if (!(k % 100000)) {
-                            await pipeline.exec();
-                            //plRes = null;
+                            try {
+                                await pipeline.exec((error, results) => {
+                                    if(error) console.log("ERROR ERROR 1: " + error.message);
+                                });
+                            } catch (error) {
+                                console.log("ERROR ERROR 2: " + error.message);
+                            }
+
                             if(gc) forceGC();
                             pipeline = redis.pipeline(); //.client('reply', 'off');
                         }
@@ -147,7 +159,11 @@ if(isMainThread) {
                                 data[type].push(j);
                             }
 
-                            pipeline.zadd(tempKey, m, `${n}|${m}|${JSON.stringify(data)}`);
+                            try {
+                                pipeline.zadd(tempKey, m, `${n}|${m}|${JSON.stringify(data)}`);
+                            } catch (error) {
+                                console.log("ERROR ERROR 3: " + error.message);
+                            }
                         }
                     }
                     await pipeline.exec();
