@@ -1,3 +1,5 @@
+//TODO: bring sanity to CSV. DRY and option to get JSON or CSV results during upload independant of upload file
+
 'use strict';
 
 const ipTools = require('ip-utils');
