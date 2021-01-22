@@ -25,6 +25,7 @@ app.use(fileUpload({
     limits: { fileSize: maxUpload},
 }));
 let redisPrefix;
+const columns = ['ip','list','country','asn'];
 
 const lookupIP = (ip) => {
     let response;
@@ -80,15 +81,12 @@ exports.serve = (port, rp, prefix) => {
         }));
 
         //res.json(response);
-
-        if(req.is('application/json')) {
-            res.json(response);
-        } else {
+        if([1,'1',true,'true'].includes(req.query.csv)) {
             // console.log('post csv');
             // console.log(response);
             res.header('Content-Type', 'text/plain');
             const header = (![0, '0', false, 'false'].includes(req.query.header));
-            const columns = ['ip','list','country'];
+
             const stringifier = stringify({columns: columns, header: header});
             stringifier.on('readable', function(){
                 let row;
@@ -102,12 +100,15 @@ exports.serve = (port, rp, prefix) => {
             stringifier.on('finish',() => res.end());
 
             for (const ip in response) {
-                let lists = '', countries = '';
+                let lists = '', countries = '', asns = '';
                 if(response[ip].list) lists = response[ip].list.map(l => l.name).join('|');
                 if(response[ip].geo) countries = response[ip].geo.map(l => l.country).join('|');
-                stringifier.write([ip,lists,countries]);
+                if(response[ip].asn) asns = response[ip].asn.map(l => l.name).join('|');
+                stringifier.write([ip,lists,countries,asns]);
             }
             stringifier.end();
+        } else {
+            res.json(response);
         }
     });
 
@@ -151,7 +152,7 @@ exports.serve = (port, rp, prefix) => {
             contentType = 'text/csv';
             fileName = 'ips.csv';
             const header = (![0, '0', false, 'false'].includes(req.query.header));
-            const columns = ['ip','list','country'];
+
             stringifier = stringify({columns: columns, header: header});
             stringifier.on('readable', function(){
                 let row;
@@ -172,10 +173,11 @@ exports.serve = (port, rp, prefix) => {
             response[ip] = (list===null) ? [] : list;
 
             if(fileType==='csv') {
-                let lists = '', countries = '';
+                let lists = '', countries = '', asns = '';
                 if (response[ip].list) lists = response[ip].list.map(l => l.name).join('|');
                 if (response[ip].geo) countries = response[ip].geo.map(l => l.country).join('|');
-                stringifier.write([ip, lists, countries]);
+                if (response[ip].asn) asns = response[ip].asn.map(l => l.name).join('|');
+                stringifier.write([ip,lists,countries,asns]);
             }
         }));
         if(fileType==='csv') stringifier.end();
@@ -193,11 +195,12 @@ exports.serve = (port, rp, prefix) => {
             if([1,'1',true,'true'].includes(req.query.csv)) {
                 const header = (![0, '0', false, 'false'].includes(req.query.header));
                 res.header('Content-Type', 'text/plain');
-                const columns = ['ip','list','country'];
-                let lists = '', countries = '';
+
+                let lists = '', countries = '', asns = '';
                 if(ipLists.list) lists = ipLists.list.map(l => l.name).join('|');
                 if(ipLists.geo) countries = ipLists.geo.map(l => l.country).join('|');
-                stringify([[ip,lists,countries]],{columns: columns, header: header},(err,output) => res.send(output));
+                if (ipLists.asn) asns = ipLists.asn.map(l => l.name).join('|');
+                stringify([[ip,lists,countries,asns]],{columns: columns, header: header},(err,output) => res.send(output));
             } else {
                 res.json(response);
             }
@@ -221,11 +224,12 @@ exports.serve = (port, rp, prefix) => {
             if([1,'1',true,'true'].includes(req.query.csv)) {
                 const header = (![0, '0', false, 'false'].includes(req.query.header));
                 res.header('Content-Type', 'text/plain');
-                const columns = ['list','country'];
-                let lists = '', countries = '';
+
+                let lists = '', countries = '', asns = '';
                 if(ipLists.list) lists = ipLists.list.map(l => l.name).join('|');
                 if(ipLists.geo) countries = ipLists.geo.map(l => l.country).join('|');
-                stringify([[lists,countries]],{columns: columns, header: header},(err,output) => res.send(output));
+                if(ipLists.asn) asns = ipLists.asn.map(l => l.name).join('|');
+                stringify([[lists,countries,asns]],{columns: columns, header: header},(err,output) => res.send(output));
             } else {
                 res.json(response);
             }

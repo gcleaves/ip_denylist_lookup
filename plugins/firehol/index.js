@@ -87,7 +87,7 @@ module.exports = async (outputFile, listArray) => {
                 setTimeout(()=>{
                     timeout = true;
                     resolve();
-                },5 * 60 * 1000)
+                },10 * 60 * 1000)
             })
         ]).catch(error=>{
 			clearInterval(interval);
