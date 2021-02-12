@@ -45,7 +45,7 @@ if(isMainThread) {
                         "inner join udger_datacenter_list l on r.datacenter_id=l.id limit -1", function (err, row) {
                         const meta = {
                             type: "list",
-                            source: "udger",
+                            source: pluginName,
                             name: "datacenter",
                             meta: {
                                 "datacenter_name": row.name
@@ -66,7 +66,7 @@ if(isMainThread) {
                             type: "geo",
                             country: row.country,
                             city: row.city,
-                            source: "udger"
+                            source: pluginName
                         };
                         let metadata = JSON.stringify(meta);
                         let csv = `${ip.toLong(row.ip)}|${ip.toLong(row.ip)}|` + metadata + "\n";
@@ -76,7 +76,7 @@ if(isMainThread) {
                         delete meta.city;
                         delete meta.region;
                         meta.type = "list";
-                        meta.source = "udger";
+                        meta.source = pluginName;
                         meta.name = row.code;
                         metadata = JSON.stringify(meta);
                         csv = `${ip.toLong(row.ip)}|${ip.toLong(row.ip)}|` + metadata + "\n";

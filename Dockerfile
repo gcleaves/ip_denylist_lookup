@@ -1,6 +1,6 @@
 FROM node:15-alpine
 ENV NODE_OPTIONS=--max_old_space_size=4096
-#RUN apk add dos2unix
+RUN apk add --update gcc g++ make python
 WORKDIR /code
 COPY . .
 #RUN dos2unix start.sh

@@ -35,13 +35,13 @@ module.exports = [
         },
         abortOnFail: false
     },
-    {
-        name: 'udgerStale',
-        load() {
-            return udgerStale(path.join(__dirname,'staging','udger_stale.data.txt'))
-        },
-        abortOnFail: true
-    },
+//    {
+//        name: 'udgerStale',
+//        load() {
+//            return udgerStale(path.join(__dirname,'staging','udger_stale.data.txt'))
+//        },
+//        abortOnFail: true
+//    },
     {
         name: 'maxmindLiteCity',
         load() {

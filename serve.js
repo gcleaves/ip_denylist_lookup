@@ -41,13 +41,15 @@ const lookupIP = (ip) => {
         const long = ipTools.toLong(ip);
         redis.zrangebyscore(redisPrefix + 'ranges', long, '+inf', 'LIMIT', 0, 1).then(answer => {
             const item = answer[0];
-            const [startInt, endInt, lists] = item.split('|');
+	    if(!item) {
+		    reject(new Error("not ready"));
+		    return;
+	    }
+	    const [startInt, endInt, lists] = item.split('|');
             if (long >= startInt && long <= endInt) {
                 response = JSON.parse(lists);
-                //console.log(message, ip, response);
                 resolve(response, ip);
             }
-            //console.log(message, ip, '');
             resolve(null);
         });
     }));
@@ -206,7 +208,10 @@ exports.serve = (port, rp, prefix) => {
             } else {
                 res.json(response);
             }
-        })
+        }).catch((e) => {
+            res.status(503);
+            res.send(e.message);
+        });
     });
 
     router.get('/:ip', (req, res) => {
@@ -235,7 +240,10 @@ exports.serve = (port, rp, prefix) => {
             } else {
                 res.json(response);
             }
-        });
+        }).catch((e) => {
+	    res.status(503);
+	    res.send(e.message);
+	});
     });
 
     app.use(prefix, router);

@@ -2,7 +2,7 @@
   "name": "ip_denylist_plugin_udger",
   "version": "1.0.0",
   "dependencies": {
-    "sqlite3": "^5.0.0"
+    "sqlite3": "^5.0.1"
   },
   "main": "index.js"
 }

@@ -1,15 +1,20 @@
 version: "3.8"
 
+volumes:
+  node_modules:
 services:
   web:
     build: .
     ports:
-      - "3000:3000"
+      - "3005:3000"
     depends_on:
       - redis
     environment:
       - REDIS_HOST=redis
       - IP_CRON=5 2 * * *
+    volumes:
+      - .:/code
+      - node_modules:/code/node_modules
 
   redis:
     image: "redis:6-alpine"
