@@ -79,10 +79,14 @@ exports.serve = (port, rp, prefix) => {
             ips = req.body.split(/,|\r?\n/);
         }
 
-        await Promise.all(ips.map(async ip => {
-            const list = await lookupIP(ip);
-            response[ip] = (list===null) ? [] : list;
-        }));
+        try {
+            await Promise.all(ips.map(async ip => {
+                const list = await lookupIP(ip);
+                response[ip] = (list===null) ? [] : list;
+            }));
+        } catch (e) {
+            return res.status(503).send(e.message);
+        }
 
         //res.json(response);
         if([1,'1',true,'true'].includes(req.query.csv)) {
@@ -172,21 +176,24 @@ exports.serve = (port, rp, prefix) => {
 
         res.header('Content-Type', contentType);
         res.attachment(fileName);
-        await Promise.all(ips.map(async ip => {
-            const list = await lookupIP(ip);
-            response[ip] = (list===null) ? [] : list;
+        try {
+            await Promise.all(ips.map(async ip => {
+                const list = await lookupIP(ip);
+                response[ip] = (list === null) ? [] : list;
 
-            if(fileType==='csv') {
-                let lists = '', countries = '', asns = '';
-                if (response[ip].list) lists = response[ip].list.map(l => l.name).join('|');
-                if (response[ip].geo) countries = response[ip].geo.map(l => l.country).join('|');
-                if (response[ip].asn) asns = response[ip].asn.map(l => l.name).join('|');
-                stringifier.write([ip,lists,countries,asns]);
-            }
-        }));
-        if(fileType==='csv') stringifier.end();
-        else res.send(JSON.stringify(response));
-
+                if (fileType === 'csv') {
+                    let lists = '', countries = '', asns = '';
+                    if (response[ip].list) lists = response[ip].list.map(l => l.name).join('|');
+                    if (response[ip].geo) countries = response[ip].geo.map(l => l.country).join('|');
+                    if (response[ip].asn) asns = response[ip].asn.map(l => l.name).join('|');
+                    stringifier.write([ip, lists, countries, asns]);
+                }
+            }));
+            if (fileType === 'csv') stringifier.end();
+            else res.send(JSON.stringify(response));
+        } catch (e) {
+            return res.status(503).send(e.message);
+        }
     });
 
     router.get('/myip', (req, res) => {
@@ -209,8 +216,7 @@ exports.serve = (port, rp, prefix) => {
                 res.json(response);
             }
         }).catch((e) => {
-            res.status(503);
-            res.send(e.message);
+            res.status(503).send(e.message);
         });
     });
 
@@ -241,9 +247,8 @@ exports.serve = (port, rp, prefix) => {
                 res.json(response);
             }
         }).catch((e) => {
-	    res.status(503);
-	    res.send(e.message);
-	});
+            res.status(503).send(e.message);
+	    });
     });
 
     app.use(prefix, router);
