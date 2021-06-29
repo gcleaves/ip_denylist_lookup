@@ -25,7 +25,9 @@
     "ip_denylist_plugin_maxmind_lite_city": "file:./plugins/maxmind_lite_city",
     "ip_denylist_plugin_udger": "file:./plugins/udger",
     "ip_denylist_plugin_udger_stale": "file:./plugins/udger_stale",
+    "ip_denylist_plugin_upstream": "file:./plugins/upstream",
     "ip-utils": "^2.4.0",
-    "minimist": "^1.2.5"
+    "minimist": "^1.2.5",
+    "sqlite3": "^5.0.1"
   }
 }

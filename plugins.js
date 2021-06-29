@@ -2,6 +2,7 @@ const path = require('path');
 const firehol = require('ip_denylist_plugin_firehol');
 const firehol_worker = require('ip_denylist_plugin_firehol_worker');
 const example = require('ip_denylist_plugin_example');
+const upstream = require('ip_denylist_plugin_upstream');
 const udger = require('ip_denylist_plugin_udger');
 const udgerStale = require('ip_denylist_plugin_udger_stale');
 const maxmindLiteCity = require('ip_denylist_plugin_maxmind_lite_city');
@@ -10,14 +11,14 @@ const maxmindLiteASN = require('ip_denylist_plugin_maxmind_lite_asn');
 const fireholLists = [
     'https://iplists.firehol.org/files/firehol_level1.netset',
     'https://iplists.firehol.org/files/firehol_level2.netset',
-    'https://iplists.firehol.org/files/firehol_level3.netset',
-    'https://iplists.firehol.org/files/firehol_level4.netset',
-    'https://iplists.firehol.org/files/firehol_proxies.netset',
-    'https://iplists.firehol.org/files/firehol_webclient.netset',
-    'https://iplists.firehol.org/files/firehol_webserver.netset',
-    'https://iplists.firehol.org/files/firehol_abusers_1d.netset',
-    'https://iplists.firehol.org/files/firehol_abusers_30d.netset',
-    'https://iplists.firehol.org/files/firehol_anonymous.netset'
+    // 'https://iplists.firehol.org/files/firehol_level3.netset',
+    // 'https://iplists.firehol.org/files/firehol_level4.netset',
+    // 'https://iplists.firehol.org/files/firehol_proxies.netset',
+    // 'https://iplists.firehol.org/files/firehol_webclient.netset',
+    // 'https://iplists.firehol.org/files/firehol_webserver.netset',
+    // 'https://iplists.firehol.org/files/firehol_abusers_1d.netset',
+    // 'https://iplists.firehol.org/files/firehol_abusers_30d.netset',
+    // 'https://iplists.firehol.org/files/firehol_anonymous.netset'
 ];
 
 module.exports = [
@@ -29,12 +30,19 @@ module.exports = [
         abortOnFail: false
     },
     {
-        name: 'udger',
+        name: 'upstream',
         load() {
-            return udger(path.join(__dirname,'staging','udger.data.txt'))
+            return upstream(path.join(__dirname,'staging','upstream.data.txt'))
         },
         abortOnFail: false
     },
+    // {
+    //     name: 'udger',
+    //     load() {
+    //         return udger(path.join(__dirname,'staging','udger.data.txt'))
+    //     },
+    //     abortOnFail: false
+    // },
 //    {
 //        name: 'udgerStale',
 //        load() {
@@ -42,13 +50,13 @@ module.exports = [
 //        },
 //        abortOnFail: true
 //    },
-    {
-        name: 'maxmindLiteCity',
-        load() {
-            return maxmindLiteCity(path.join(__dirname,'staging','maxmind_lite_city.data.txt'))
-        },
-        abortOnFail: false
-    },
+    // {
+    //     name: 'maxmindLiteCity',
+    //     load() {
+    //         return maxmindLiteCity(path.join(__dirname,'staging','maxmind_lite_city.data.txt'))
+    //     },
+    //     abortOnFail: false
+    // },
     {
        name: 'maxmindLiteASN',
        load() {

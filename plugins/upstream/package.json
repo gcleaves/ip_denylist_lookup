@@ -1,0 +1,9 @@
+{
+  "name": "ip_denylist_plugin_upstream",
+  "version": "1.0.0",
+  "dependencies": {
+    "ip-utils": "^2.4.0",
+    "csv": "^5"
+  },
+  "main": "index.js"
+}
