@@ -15,6 +15,7 @@ const redis = new Redis({
 const express = require('express');
 const readline = require('readline');
 const stream = require('stream');
+const smaz = require('@remusao/smaz');
 const stringifySync = require('csv/lib/sync').stringify;
 const stringify = require('csv').stringify;
 const app = express();
@@ -39,13 +40,20 @@ const lookupIP = (ip) => {
             resolve(false);
         }
         const long = ipTools.toLong(ip);
-        redis.zrangebyscore(redisPrefix + 'ranges', long, '+inf', 'LIMIT', 0, 1).then(answer => {
-            const item = answer[0];
-	    if(!item) {
-		    reject(new Error("not ready"));
-		    return;
-	    }
-	    const [startInt, endInt, lists] = item.split('|');
+        let command = 'zrangebyscore';
+        if(process.env.COMPRESS==1) {
+            command = 'zrangebyscoreBuffer';
+        }
+        redis[command](redisPrefix + 'ranges', long, '+inf', 'LIMIT', 0, 1).then(answer => {
+            let item = answer[0];
+            if(process.env.COMPRESS==1) {
+                item = smaz.decompress(item);
+            }
+            if(!item) {
+                reject(new Error("not ready"));
+                return;
+            }
+	        const [startInt, endInt, lists] = item.split('|');
             if (long >= startInt && long <= endInt) {
                 response = JSON.parse(lists);
                 resolve(response, ip);

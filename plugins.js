@@ -22,13 +22,13 @@ const fireholLists = [
 ];
 
 module.exports = [
-    {
-        name: 'example',
-        load() {
-            return example(path.join(__dirname,'staging','example.data.txt'))
-        },
-        abortOnFail: false
-    },
+    // {
+    //     name: 'example',
+    //     load() {
+    //         return example(path.join(__dirname,'staging','example.data.txt'))
+    //     },
+    //     abortOnFail: false
+    // },
     {
         name: 'upstream',
         load() {
@@ -57,13 +57,13 @@ module.exports = [
     //     },
     //     abortOnFail: false
     // },
-    {
-       name: 'maxmindLiteASN',
-       load() {
-           return maxmindLiteASN(path.join(__dirname,'staging','maxmind_lite_asn.data.txt'))
-        },
-        abortOnFail: false
-    },
+    // {
+    //    name: 'maxmindLiteASN',
+    //    load() {
+    //        return maxmindLiteASN(path.join(__dirname,'staging','maxmind_lite_asn.data.txt'))
+    //     },
+    //     abortOnFail: false
+    // },
     {
         name: 'firehol',
         load() {

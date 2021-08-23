@@ -1,4 +1,5 @@
 'use strict';
+const smaz = require('@remusao/smaz');
 const { Worker, isMainThread,  workerData, parentPort } = require('worker_threads');
 const pluginName = 'load_to_redis';
 
@@ -160,7 +161,12 @@ if(isMainThread) {
                             }
 
                             try {
-                                pipeline.zadd(tempKey, m, `${n}|${m}|${JSON.stringify(data)}`);
+                                //const gtc = smaz.compress(`${n}|${m}|${JSON.stringify(data)}`);
+                                let gtc = (`${n}|${m}|${JSON.stringify(data)}`);
+                                if(process.env.COMPRESS==1) {
+                                    gtc = Buffer.from(smaz.compress(gtc));
+                                }
+                                pipeline.zadd(tempKey, m, gtc);
                             } catch (error) {
                                 console.log("ERROR ERROR 3: " + error.message);
                             }
