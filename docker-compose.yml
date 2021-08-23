@@ -17,11 +17,13 @@ services:
     volumes:
       - .:/code
       - node_modules:/code/node_modules
+    restart: unless-stopped
 
   redis:
     image: "redis:6-alpine"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
 # optional and unnecessary
 #  redis-commander:
